@@ -42,19 +42,17 @@
 #include <asm/arch_timer.h>
 #include <asm/cacheflush.h>
 #include "lpm-levels.h"
-#ifdef CONFIG_CX_VOTE_TURBO
-#include "lpm-workarounds.h"
-#endif
-#include <trace/events/power.h>
 #include <linux/regulator/consumer.h>
 #include <linux/pinctrl/sec-pinmux.h>
 #include <linux/qpnp/pin.h>
 #ifdef CONFIG_SEC_GPIO_DVS
 #include <linux/secgpio_dvs.h>
 #endif
-
+#include "lpm-workarounds.h"
+#include <trace/events/power.h>
 #define CREATE_TRACE_POINTS
 #include <trace/events/trace_msm_low_power.h>
+
 #define SCLK_HZ (32768)
 #define SCM_HANDOFF_LOCK_ID "S:7"
 static remote_spinlock_t scm_handoff_lock;
@@ -229,13 +227,11 @@ int set_l2_mode(struct low_power_ops *ops, int mode, bool notify_rpm)
 		break;
 	}
 
-#ifdef CONFIG_CX_VOTE_TURBO
 	/* Do not program L2 SPM enable bit. This will be set by TZ */
 	if (lpm_wa_get_skip_l2_spm())
 		rc = msm_spm_config_low_power_mode_addr(ops->spm, lpm,
 							true);
 	else
-#endif
 		rc = msm_spm_config_low_power_mode(ops->spm, lpm, true);
 
 	if (rc)
@@ -1015,6 +1011,7 @@ static int lpm_probe(struct platform_device *pdev)
 				__func__);
 		goto failed;
 	}
+
 	return 0;
 failed:
 	free_cluster_node(lpm_root_node);
